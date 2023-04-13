@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  # Define REMO as a service that depends on TensorFlow and openai services
+  remo:
+    # Build the image from the Dockerfile in the current directory
+    build: .
+    # Expose port 8000 on the host machine and map it to port 8000 on the container
+    ports:
+      - "8000:8000"
+    # Mount a volume named remo_data at /REMO in the container to persist chat data
+    volumes:
+      - remo_data:/REMO
+    # Connect to two networks: remo_backend for communication with dependencies and remo_frontend for communication with clients
+    networks:
+      - remo_backend
+      - remo_frontend
+
+  # Define TensorFlow as a service that provides machine learning capabilities for REMO
+  tensorflow:
+    # Use tensorflow/serving as the base image for this service
+    image: tensorflow/serving
+    # Connect to remo_backend network only
+    networks:
+      - remo_backend
+
+  # Define openai as a service that provides summarization capabilities for REMO
+  openai:
+    # Use openai/openai as the base image for this service
+    image: openai/openai
+    # Connect to remo_backend network only
+    networks:
+      - remo_backend
+
+volumes:
+  # Define a volume named remo_data to store chat data outside of the container's writable layer
+  remo_data:
+
+networks:
+  # Define a network named remo_backend for communication between REMO and its dependencies
+  remo_backend:
+  # Define a network named remo_frontend for communication between REMO and its clients
+  remo_frontend:

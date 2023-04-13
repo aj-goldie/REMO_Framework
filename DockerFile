@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+
+# Use python:3.7-slim as the base image for the first stage of the build
+# This image is small and contains the Python runtime and essential packages
+FROM python:3.7-slim AS builder
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the requirements.txt file to /app
+COPY requirements.txt .
+
+# Install the dependencies using pip
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the source code of REMO to /app
+COPY . .
+
+# Use tiangolo/uvicorn-gunicorn-fastapi as the base image for the second stage of the build
+# This image contains FastAPI, Uvicorn, and Gunicorn pre-installed and configured
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.7
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the built artifacts from the first stage to /app
+COPY --from=builder /app .
+
+# Expose port 8000 for the FastAPI server
+EXPOSE 8000
+
+# Run the FastAPI server using Uvicorn and Gunicorn
+CMD ["uvicorn", "remo:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+
